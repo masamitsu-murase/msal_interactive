@@ -7,6 +7,10 @@ BASE_DIR = Path(__file__).absolute().parent
 MSAL_EXE = str(BASE_DIR / "tools" / "msal_interactive_cli.exe")
 
 
+class MsalError(RuntimeError):
+    pass
+
+
 class MsalInteractiveTokenAcquirer(object):
     def __init__(self, tenant, client_id, scopes):
         self._tenant = tenant
@@ -29,7 +33,7 @@ class MsalInteractiveTokenAcquirer(object):
 
     def acquire_token(self, interactive):
         with subprocess.Popen([MSAL_EXE],
-                              bufsize=0,
+                              bufsize=1,
                               stdin=subprocess.PIPE,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.DEVNULL,
@@ -41,6 +45,9 @@ class MsalInteractiveTokenAcquirer(object):
                 pipe.stdin.flush()
 
                 result = json.loads(pipe.stdout.readline())
+                if result.get("error"):
+                    raise MsalError(result["error"])
+
                 access_token = result["access_token"]
                 cache_data_base64 = result["cache_data_base64"]
                 expires_at = datetime(*result["expires_at"],

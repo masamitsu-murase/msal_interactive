@@ -55,26 +55,46 @@ namespace msal_interactive_cli
             return app;
         }
 
-        static async Task<(AuthenticationResult, byte[])> GetToken(string tenant, string clientId, string redirectUri,
-            string[] scopes, byte[] cacheData)
+        static async Task<(AuthenticationResult, byte[], string)>
+        GetToken(string tenant, string clientId, string redirectUri,
+            string[] scopes, byte[] cacheData, bool interactive)
         {
             var app = CreatePublicClient(tenant, clientId, redirectUri);
             var tokenCache = new TokenCacheHelper(cacheData);
             tokenCache.EnableSerialization(app.UserTokenCache);
 
-            var accounts = await app.GetAccountsAsync();
-            var account = accounts.FirstOrDefault();
             AuthenticationResult result;
             try
             {
-                result = await app.AcquireTokenSilent(scopes, account).ExecuteAsync();
+                var accounts = await app.GetAccountsAsync();
+                var account = accounts.FirstOrDefault();
+                if (interactive)
+                {
+                    try
+                    {
+                        result = await app.AcquireTokenSilent(scopes, account)
+                            .WithForceRefresh(true)
+                            .ExecuteAsync();
+                    }
+                    catch (MsalUiRequiredException)
+                    {
+                        result = await app.AcquireTokenInteractive(scopes)
+                            .WithPrompt(Prompt.SelectAccount)
+                            .ExecuteAsync();
+                    }
+                }
+                else
+                {
+                    result = await app.AcquireTokenSilent(scopes, account)
+                        .WithForceRefresh(true)
+                        .ExecuteAsync();
+                }
             }
-            catch (MsalUiRequiredException)
+            catch (Exception ex)
             {
-                result = await app.AcquireTokenInteractive(scopes)
-                    .ExecuteAsync();
+                return (null, tokenCache.CacheData, ex.Message);
             }
-            return (result, tokenCache.CacheData);
+            return (result, tokenCache.CacheData, null);
         }
 
         static InputParameter ProcessInput()
@@ -83,15 +103,27 @@ namespace msal_interactive_cli
             return JsonSerializer.Deserialize<InputParameter>(line);
         }
 
-        static void SendOutput(AuthenticationResult result, byte[] cacheData)
+        static void SendOutput(AuthenticationResult result, byte[] cacheData, string error_message)
         {
-            var expires_on = result.ExpiresOn.UtcDateTime;
-            var obj = new OutputParameter
+            OutputParameter obj;
+            if (error_message != null)
             {
-                access_token = result.AccessToken,
-                cache_data_base64 = Convert.ToBase64String(cacheData),
-                expires_at = new int[] { expires_on.Year, expires_on.Month, expires_on.Day, expires_on.Hour, expires_on.Minute, expires_on.Second }
-            };
+                obj = new OutputParameter
+                {
+                    error = error_message
+                };
+            }
+            else
+            {
+                var expires_on = result.ExpiresOn.UtcDateTime;
+                obj = new OutputParameter
+                {
+                    error = error_message,
+                    access_token = result.AccessToken,
+                    cache_data_base64 = Convert.ToBase64String(cacheData),
+                    expires_at = new int[] { expires_on.Year, expires_on.Month, expires_on.Day, expires_on.Hour, expires_on.Minute, expires_on.Second }
+                };
+            }
             Console.WriteLine(JsonSerializer.Serialize(obj));
         }
 
@@ -103,9 +135,10 @@ namespace msal_interactive_cli
             while (input_parameter.action != "quit")
             {
                 var task = GetToken(input_parameter.tenant, input_parameter.client_id,
-                    redirectUri, input_parameter.scopes, input_parameter.cacheData);
-                var (result, cacheData) = task.Result;
-                SendOutput(result, cacheData);
+                    redirectUri, input_parameter.scopes, input_parameter.cacheData,
+                    input_parameter.interactive);
+                var (result, cacheData, error) = task.Result;
+                SendOutput(result, cacheData, error);
                 input_parameter = ProcessInput();
             }
         }
