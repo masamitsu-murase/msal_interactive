@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IdentityModel.Tokens;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -13,13 +14,17 @@ namespace msal_interactive_cli
     class InputParameter
     {
         public string action { get; set; }
+        public string tenant { get; set; }
+        public string client_id { get; set; }
+        public string[] scopes { get; set; }
         public string cache_data_base64 { get; set; }
+        public bool interactive { get; set; }
 
         public byte[] cacheData
         {
             get
             {
-                if (cache_data_base64==null || !cache_data_base64.Any())
+                if (cache_data_base64 == null || !cache_data_base64.Any())
                 {
                     return null;
                 }
@@ -31,8 +36,10 @@ namespace msal_interactive_cli
 
     class OutputParameter
     {
+        public string error { get; set; }
         public string access_token { get; set; }
         public string cache_data_base64 { get; set; }
+        public int[] expires_at { get; set; }
     }
 
     class Program
@@ -48,7 +55,7 @@ namespace msal_interactive_cli
             return app;
         }
 
-        static async Task<(string, byte[])> GetToken(string tenant, string clientId, string redirectUri,
+        static async Task<(AuthenticationResult, byte[])> GetToken(string tenant, string clientId, string redirectUri,
             string[] scopes, byte[] cacheData)
         {
             var app = CreatePublicClient(tenant, clientId, redirectUri);
@@ -67,7 +74,7 @@ namespace msal_interactive_cli
                 result = await app.AcquireTokenInteractive(scopes)
                     .ExecuteAsync();
             }
-            return ("result", tokenCache.CacheData);
+            return (result, tokenCache.CacheData);
         }
 
         static InputParameter ProcessInput()
@@ -76,28 +83,27 @@ namespace msal_interactive_cli
             return JsonSerializer.Deserialize<InputParameter>(line);
         }
 
-        static void SendOutput(string accessToken, byte[] cacheData)
+        static void SendOutput(AuthenticationResult result, byte[] cacheData)
         {
+            var expires_on = result.ExpiresOn.UtcDateTime;
             var obj = new OutputParameter
             {
-                access_token = accessToken,
-                cache_data_base64 = Convert.ToBase64String(cacheData)
+                access_token = result.AccessToken,
+                cache_data_base64 = Convert.ToBase64String(cacheData),
+                expires_at = new int[] { expires_on.Year, expires_on.Month, expires_on.Day, expires_on.Hour, expires_on.Minute, expires_on.Second }
             };
             Console.WriteLine(JsonSerializer.Serialize(obj));
         }
 
         static void Main(string[] args)
         {
-            var tenant = args[0];
-            var clientId = args[1];
-            var scopes = args[2].Split(',');
-
             var redirectUri = "https://login.microsoftonline.com/common/oauth2/nativeclient";
 
             var input_parameter = ProcessInput();
             while (input_parameter.action != "quit")
             {
-                var task = GetToken(tenant, clientId, redirectUri, scopes, input_parameter.cacheData);
+                var task = GetToken(input_parameter.tenant, input_parameter.client_id,
+                    redirectUri, input_parameter.scopes, input_parameter.cacheData);
                 var (result, cacheData) = task.Result;
                 SendOutput(result, cacheData);
                 input_parameter = ProcessInput();

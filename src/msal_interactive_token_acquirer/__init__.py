@@ -1,0 +1,1 @@
+from .msal_interactive_token_acquirer import MsalInteractiveTokenAcquirer
