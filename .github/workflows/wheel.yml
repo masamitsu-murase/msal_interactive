@@ -1,0 +1,41 @@
+name: Wheel
+
+on:
+  push:
+    branches: [ master, support_test_on_github_actions ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: '5.x'
+
+    - run: nuget restore msal_interactive_cli.sln
+      working-directory: msal_interactive_cli
+
+    - uses: microsoft/setup-msbuild@v1.0.1
+
+    - run: msbuild msal_interactive_cli.sln /p:Configuration=Release
+      working-directory: msal_interactive_cli
+
+    - run: |
+        md src\msal_interactive_cli_token_acquirer\tools
+        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.dll src\msal_interactive_cli_token_acquirer\tools
+        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.exe src\msal_interactive_cli_token_acquirer\tools
+        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.config src\msal_interactive_cli_token_acquirer\tools
+      shell: cmd
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+
+    - run: pip install wheel
+    - run: python setup.py bdist_wheel
