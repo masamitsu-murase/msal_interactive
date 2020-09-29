@@ -20,7 +20,7 @@ jobs:
     - run: nuget restore msal_interactive_cli.sln
       working-directory: msal_interactive_cli
 
-    - uses: microsoft/setup-msbuild@1.0.1
+    - uses: microsoft/setup-msbuild@v1.0.1
 
     - run: msbuild msal_interactive_cli.sln /p:Configuration=Release
       working-directory: msal_interactive_cli
