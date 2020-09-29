@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from os import path
 
 here = path.abspath(path.dirname(__file__))
@@ -18,9 +18,16 @@ setup(
     author_email='masamitsu.murase@gmail.com',
     license='MIT',
     keywords='MSAL OAuth2',
-    packages=['src/msal_interactive_token_acquirer'],
+    packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,
+    package_data={
+        "msal_interactive_token_acquirer": [
+            "tools/*.dll",
+            "tools/*.exe",
+            "tools/*.exe.config"
+        ]
+    },
     zip_safe=False,
     python_requires='!=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
     project_urls={
