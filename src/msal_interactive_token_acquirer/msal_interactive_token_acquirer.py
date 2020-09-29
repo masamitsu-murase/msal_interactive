@@ -20,18 +20,19 @@ class MsalInteractiveTokenAcquirer(object):
         self._access_token = None
         self._cache_data_base64 = None
 
-    def token_acquisition_parameter(self, interactive):
+    def token_acquisition_parameter(self, interactive, login_hint):
         parameter = {
             "action": "acquire_token",
             "tenant": self._tenant,
             "client_id": self._client_id,
             "scopes": self._scopes,
             "cache_data_base64": self._cache_data_base64,
-            "interactive": interactive
+            "interactive": interactive,
+            "login_hint": login_hint
         }
         return parameter
 
-    def acquire_token(self, interactive):
+    def acquire_token(self, interactive, login_hint=None):
         with subprocess.Popen([MSAL_EXE],
                               bufsize=1,
                               stdin=subprocess.PIPE,
@@ -39,7 +40,8 @@ class MsalInteractiveTokenAcquirer(object):
                               stderr=subprocess.DEVNULL,
                               universal_newlines=True) as pipe:
             try:
-                parameter = self.token_acquisition_parameter(interactive)
+                parameter = self.token_acquisition_parameter(
+                    interactive, login_hint)
                 pipe.stdin.write(json.dumps(parameter))
                 pipe.stdin.write("\n")
                 pipe.stdin.flush()
@@ -60,8 +62,8 @@ class MsalInteractiveTokenAcquirer(object):
                 pipe.stdin.write("\n")
                 pipe.stdin.flush()
 
-    def acquire_token_interactively(self):
-        self.acquire_token(True)
+    def acquire_token_interactively(self, login_hint=None):
+        self.acquire_token(True, login_hint)
 
     def update_token(self):
         self.acquire_token(False)

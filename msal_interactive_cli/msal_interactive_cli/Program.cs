@@ -19,6 +19,7 @@ namespace msal_interactive_cli
         public string[] scopes { get; set; }
         public string cache_data_base64 { get; set; }
         public bool interactive { get; set; }
+        public string login_hint { get; set; }
 
         public byte[] cacheData
         {
@@ -56,11 +57,11 @@ namespace msal_interactive_cli
         }
 
         static async Task<(AuthenticationResult, byte[], string)>
-        GetToken(string tenant, string clientId, string redirectUri,
-            string[] scopes, byte[] cacheData, bool interactive)
+        GetToken(InputParameter input_parameter, string redirectUri)
         {
-            var app = CreatePublicClient(tenant, clientId, redirectUri);
-            var tokenCache = new TokenCacheHelper(cacheData);
+            var app = CreatePublicClient(input_parameter.tenant,
+                input_parameter.client_id, redirectUri);
+            var tokenCache = new TokenCacheHelper(input_parameter.cacheData);
             tokenCache.EnableSerialization(app.UserTokenCache);
 
             AuthenticationResult result;
@@ -68,24 +69,28 @@ namespace msal_interactive_cli
             {
                 var accounts = await app.GetAccountsAsync();
                 var account = accounts.FirstOrDefault();
-                if (interactive)
+                if (input_parameter.interactive)
                 {
                     try
                     {
-                        result = await app.AcquireTokenSilent(scopes, account)
+                        result = await app.AcquireTokenSilent(input_parameter.scopes, account)
                             .WithForceRefresh(true)
                             .ExecuteAsync();
                     }
                     catch (MsalUiRequiredException)
                     {
-                        result = await app.AcquireTokenInteractive(scopes)
-                            .WithPrompt(Prompt.SelectAccount)
-                            .ExecuteAsync();
+                        var token_acquirer = app.AcquireTokenInteractive(input_parameter.scopes)
+                            .WithPrompt(Prompt.SelectAccount);
+                        if (input_parameter.login_hint != null)
+                        {
+                            token_acquirer = token_acquirer.WithLoginHint(input_parameter.login_hint);
+                        }
+                        result = await token_acquirer.ExecuteAsync();
                     }
                 }
                 else
                 {
-                    result = await app.AcquireTokenSilent(scopes, account)
+                    result = await app.AcquireTokenSilent(input_parameter.scopes, account)
                         .WithForceRefresh(true)
                         .ExecuteAsync();
                 }
@@ -134,9 +139,7 @@ namespace msal_interactive_cli
             var input_parameter = ProcessInput();
             while (input_parameter.action != "quit")
             {
-                var task = GetToken(input_parameter.tenant, input_parameter.client_id,
-                    redirectUri, input_parameter.scopes, input_parameter.cacheData,
-                    input_parameter.interactive);
+                var task = GetToken(input_parameter, redirectUri);
                 var (result, cacheData, error) = task.Result;
                 SendOutput(result, cacheData, error);
                 input_parameter = ProcessInput();
