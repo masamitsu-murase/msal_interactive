@@ -19,6 +19,9 @@ setup(
     license='MIT',
     keywords='MSAL OAuth2',
     packages=['src/msal_interactive_token_acquirer'],
+    package_dir={"": "src"},
+    include_package_data=True,
+    zip_safe=False,
     python_requires='!=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
     project_urls={
         'Bug Reports':
