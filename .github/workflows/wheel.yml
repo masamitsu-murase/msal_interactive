@@ -3,6 +3,7 @@ name: Wheel
 on:
   push:
     branches: [ master, support_test_on_github_actions ]
+    tags: ['v*']
   pull_request:
     branches: [ master ]
 
