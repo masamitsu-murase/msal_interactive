@@ -35,10 +35,10 @@ jobs:
       working-directory: msal_interactive_cli
 
     - run: |
-        md src\msal_interactive_cli_token_acquirer\tools
-        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.dll src\msal_interactive_cli_token_acquirer\tools
-        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.exe src\msal_interactive_cli_token_acquirer\tools
-        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.config src\msal_interactive_cli_token_acquirer\tools
+        md src\msal_interactive_token_acquirer\tools
+        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.dll src\msal_interactive_token_acquirer\tools
+        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.exe src\msal_interactive_token_acquirer\tools
+        copy msal_interactive_cli\msal_interactive_cli\bin\Release\*.config src\msal_interactive_token_acquirer\tools
       shell: cmd
 
     - uses: actions/setup-python@v2
