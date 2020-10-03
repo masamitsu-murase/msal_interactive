@@ -78,6 +78,34 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: wheel
-        path: wheel
+        path: wheels
 
-    - run: ls -alF dist
+    - run: ls -alF wheels
+
+    - name: Upload all artifacts
+      uses: actions/github-script@v3
+      with:
+        release_id: ${{ steps.create_release.outputs.id }}
+        assets_dir: wheels
+        script: |
+          console.log("environment", process.versions);
+          const fs = require("fs").promises;
+          const path = require("path");
+          const { repo: { owner, repo } } = context;
+          const release_id = core.getInput("release_id", { required: true });
+          const assets_dir = core.getInput("assets_dir", { required: true });
+
+          const files = await fs.readdir(assets_dir);
+          console.log("files", files);
+          const asset_uploaders = files.map(file => {
+            return fs.readFile(file).then(data => {
+              return github.repos.uploadReleaseAsset({
+                owner,
+                repo,
+                release_id,
+                name: path.basename(file),
+                data
+              });
+            });
+          })
+          Promise.all(asset_uploaders);
