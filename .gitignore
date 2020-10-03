@@ -3,3 +3,4 @@ dist/
 wheel/
 build/
 venv/
+status.pickle
