@@ -26,7 +26,7 @@ msal.access_token()
 ```
 
 This shows the following window at `(*1)`.  
-![window](https://raw.githubusercontent.com/masamitsu-murase/msal_interactive/master/resources/window.py)
+![window](https://raw.githubusercontent.com/masamitsu-murase/msal_interactive/master/resources/window.png)
 
 You can save and load `MsalInteractiveTokenAcquirer` as follows:
 
