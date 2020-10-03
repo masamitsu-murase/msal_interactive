@@ -11,6 +11,8 @@ If you need a library for non-interactive authentication, you can use [MSAL for 
 
 ## How to use
 
+### Basic usage
+
 You can acquire Microsoft OAuth2 access token interactively as follows:
 
 ```python
@@ -25,6 +27,7 @@ msal.access_token()
 # => This returns Bearer token.
 ```
 
+Note that the redirect URI of the application must be "https://login.microsoftonline.com/common/oauth2/nativeclient".  
 This shows the following window at `(*1)`.  
 ![window](https://raw.githubusercontent.com/masamitsu-murase/msal_interactive/master/resources/window.png)
 
@@ -48,6 +51,21 @@ msal.access_token()
 # => This returns Bearer token.
 ```
 
+### Authentication with Requests HTTP library
+
+You can use this library for authentication with Requests as follows:
+
+```python
+from msal_interactive_token_acquirer import MsalInteractiveTokenAcquirer
+from msal_interactive_token_acquirer.requests_auth import MsalAuth
+import requests
+
+msal = MsalInteractiveTokenAcquirer("...", "...", ["..."])
+msal.acquire_token_interactively()
+
+auth = MsalAuth(msal)
+response = requests.get("https://......", auth=auth)
+```
 
 ## License
 
