@@ -3,4 +3,6 @@ dist/
 wheel/
 build/
 venv/
+*.egg-info/
+src/msal_interactive_token_acquirer/tools/
 status.pickle
