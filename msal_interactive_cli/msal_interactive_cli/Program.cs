@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IdentityModel.Tokens;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,6 +22,7 @@ namespace msal_interactive_cli
         public string cache_data_base64 { get; set; }
         public bool interactive { get; set; }
         public string login_hint { get; set; }
+        public DataProtectionScope data_protection_scope { get; set; }
 
         public byte[] cacheData
         {
@@ -59,14 +62,15 @@ namespace msal_interactive_cli
         static async Task<(AuthenticationResult, byte[], string)>
         GetToken(InputParameter input_parameter, string redirectUri)
         {
-            var app = CreatePublicClient(input_parameter.tenant,
-                input_parameter.client_id, redirectUri);
-            var tokenCache = new TokenCacheHelper(input_parameter.cacheData);
-            tokenCache.EnableSerialization(app.UserTokenCache);
-
-            AuthenticationResult result;
+            TokenCacheHelper tokenCache = null;
             try
             {
+                var app = CreatePublicClient(input_parameter.tenant,
+                    input_parameter.client_id, redirectUri);
+                tokenCache = new TokenCacheHelper(input_parameter.cacheData, input_parameter.data_protection_scope);
+                tokenCache.EnableSerialization(app.UserTokenCache);
+
+                AuthenticationResult result;
                 var accounts = await app.GetAccountsAsync();
                 var account = accounts.FirstOrDefault();
                 if (input_parameter.interactive)
@@ -94,18 +98,37 @@ namespace msal_interactive_cli
                         .WithForceRefresh(true)
                         .ExecuteAsync();
                 }
+                return (result, tokenCache.CacheData, null);
             }
             catch (Exception ex)
             {
-                return (null, tokenCache.CacheData, ex.Message);
+                if (tokenCache != null)
+                {
+                    return (null, tokenCache.CacheData, ex.Message);
+                }
+                else
+                {
+                    return (null, null, ex.Message);
+                }
             }
-            return (result, tokenCache.CacheData, null);
         }
 
         static InputParameter ProcessInput()
         {
-            var line = Console.ReadLine();
-            return JsonSerializer.Deserialize<InputParameter>(line);
+            while (true)
+            {
+                try
+                {
+                    var line = Console.ReadLine();
+                    var options = new JsonSerializerOptions();
+                    options.Converters.Add(new JsonStringEnumConverter());
+                    return JsonSerializer.Deserialize<InputParameter>(line, options);
+                }
+                catch (Exception ex)
+                {
+                    SendOutput(null, null, ex.Message);
+                }
+            }
         }
 
         static void SendOutput(AuthenticationResult result, byte[] cacheData, string error_message)

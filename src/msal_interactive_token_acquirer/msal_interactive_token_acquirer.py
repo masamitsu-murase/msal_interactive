@@ -12,13 +12,19 @@ class MsalError(RuntimeError):
 
 
 class MsalInteractiveTokenAcquirer(object):
-    def __init__(self, tenant, client_id, scopes):
+    def __init__(self,
+                 tenant,
+                 client_id,
+                 scopes,
+                 *,
+                 data_protection_scope="CurrentUser"):
         self._tenant = tenant
         self._client_id = client_id
         self._scopes = scopes
         self._expires_at = None
         self._access_token = None
         self._cache_data_base64 = None
+        self._data_protection_scope = data_protection_scope
 
     def token_acquisition_parameter(self, interactive, login_hint):
         parameter = {
@@ -28,7 +34,8 @@ class MsalInteractiveTokenAcquirer(object):
             "scopes": self._scopes,
             "cache_data_base64": self._cache_data_base64,
             "interactive": interactive,
-            "login_hint": login_hint
+            "login_hint": login_hint,
+            "data_protection_scope": self._data_protection_scope
         }
         return parameter
 
