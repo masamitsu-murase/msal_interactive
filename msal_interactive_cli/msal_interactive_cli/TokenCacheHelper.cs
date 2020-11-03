@@ -16,10 +16,12 @@ namespace msal_interactive_cli
             102, 82, 159, 62, 168, 246, 213, 232, 90, 35, 114, 0, 101, 28, 102, 107,
             70, 226, 179, 2, 34, 116, 132, 85, 150, 14, 145, 125, 252, 70, 127, 44 };
         private byte[] cacheData;
+        private DataProtectionScope dataProtectionScope;
 
-        public TokenCacheHelper(byte[] data)
+        public TokenCacheHelper(byte[] data, DataProtectionScope protectionScope)
         {
             cacheData = data;
+            dataProtectionScope = protectionScope;
         }
 
         public byte[] CacheData
@@ -32,7 +34,7 @@ namespace msal_interactive_cli
             byte[] data = null;
             if (cacheData != null)
             {
-                data = ProtectedData.Unprotect(cacheData, PROTECT_DATA_ENTROPY, DataProtectionScope.CurrentUser);
+                data = ProtectedData.Unprotect(cacheData, PROTECT_DATA_ENTROPY, dataProtectionScope);
             }
             args.TokenCache.DeserializeMsalV3(data);
         }
@@ -44,7 +46,7 @@ namespace msal_interactive_cli
             {
                 cacheData = ProtectedData.Protect(args.TokenCache.SerializeMsalV3(),
                     PROTECT_DATA_ENTROPY,
-                    DataProtectionScope.CurrentUser);
+                    dataProtectionScope);
             }
         }
 
