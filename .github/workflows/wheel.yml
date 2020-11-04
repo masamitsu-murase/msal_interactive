@@ -22,14 +22,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - uses: nuget/setup-nuget@v1
-      with:
-        nuget-version: '5.x'
+    - uses: microsoft/setup-msbuild@v1.0.2
 
     - run: nuget restore msal_interactive_cli.sln
       working-directory: msal_interactive_cli
-
-    - uses: microsoft/setup-msbuild@v1.0.1
 
     - run: msbuild msal_interactive_cli.sln /p:Configuration=Release
       working-directory: msal_interactive_cli
