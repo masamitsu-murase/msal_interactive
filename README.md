@@ -68,6 +68,19 @@ auth = MsalAuth(msal)
 response = requests.get("https://......", auth=auth)
 ```
 
+Or, you can use `MsalSession` like `requests.Session` as follows:
+
+```python
+from msal_interactive_token_acquirer import MsalInteractiveTokenAcquirer
+from msal_interactive_token_acquirer.requests import MsalSession
+
+msal = MsalInteractiveTokenAcquirer("...", "...", ["..."])
+msal.acquire_token_interactively()
+
+session = MsalSession(msal)
+response = session.get("https://......")
+```
+
 ## License
 
 You can use this library under the MIT License.
