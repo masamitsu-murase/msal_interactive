@@ -1,4 +1,5 @@
 from msal_interactive_token_acquirer import MsalInteractiveTokenAcquirer
+from msal_interactive_token_acquirer.requests import MsalSession
 from msal_interactive_token_acquirer.requests_auth import MsalAuth
 import pickle
 import requests
@@ -16,6 +17,11 @@ else:
 
 result = requests.get("https://graph.microsoft.com/v1.0/me",
                       auth=MsalAuth(msal)).json()
+print(result)
+
+session = MsalSession(msal)
+id = result['id']
+result = session.get(f"https://graph.microsoft.com/v1.0/users/{id}").json()
 print(result)
 
 with open(filename, "wb") as f:
