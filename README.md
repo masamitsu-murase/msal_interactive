@@ -1,4 +1,4 @@
-![Wheel](https://github.com/masamitsu-murase/msal_interactive/workflows/Wheel/badge.svg)
+[![Wheel](https://github.com/masamitsu-murase/msal_interactive/actions/workflows/wheel.yml/badge.svg)](https://github.com/masamitsu-murase/msal_interactive/actions/workflows/wheel.yml)
 [![PyPI version](https://badge.fury.io/py/msal-interactive-token-acquirer.svg)](https://badge.fury.io/py/msal-interactive-token-acquirer)
 
 # MSAL Interactive Token Acquirer
