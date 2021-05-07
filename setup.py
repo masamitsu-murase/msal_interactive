@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='msal_interactive_token_acquirer',
-    version='1.2.0',
+    version='1.3.0',
     description='A library to get MSAL token interactively for native client.',
     long_description=long_description,
     long_description_content_type='text/markdown',
