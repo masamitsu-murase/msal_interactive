@@ -1,4 +1,5 @@
 ﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Desktop;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -53,6 +54,7 @@ namespace msal_interactive_cli
         static IPublicClientApplication CreatePublicClient(string tenant, string clientId, string redirectUri)
         {
             var app = PublicClientApplicationBuilder.Create(clientId)
+                .WithDesktopFeatures()
                 .WithAuthority($"{BASE_LOGIN_URL}{tenant}")
                 .WithRedirectUri(redirectUri)
                 .Build();
