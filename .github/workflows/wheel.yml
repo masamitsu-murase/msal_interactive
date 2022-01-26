@@ -12,8 +12,9 @@ jobs:
     strategy:
       matrix:
         platform:
-        - python: x86
-          wheel: win32
+        # exe is build for x64
+        # - python: x86
+        #   wheel: win32
         - python: x64
           wheel: win-amd64
 
@@ -39,7 +40,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: '3.9'
         architecture: ${{ matrix.platform.python }}
 
     - run: pip install wheel
